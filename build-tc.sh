@@ -46,14 +46,19 @@ builder_commit="$(git rev-parse HEAD)"
 # Send a notificaton to TG
 tg_post_msg "<b>$LLVM_NAME: Toolchain Compilation Started</b>%0A<b>Date : </b><code>$rel_friendly_date</code>%0A<b>Toolchain Script Commit : </b><code>$builder_commit</code>%0A"
 
+git clone https://gitlab.com/varunhardgamer/trb_clang /drone/src/trb --depth=1
+export PATH=/drone/src/trb/bin:$PATH
+export LD_LIBRARY_PATH=/drone/src/trb/lib:$LD_LIBRARY_PATH
+
 # Build LLVM
 msg "$LLVM_NAME: Building LLVM..."
 tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 ./build-llvm.py \
 	--clang-vendor "$LLVM_NAME" \
 	--projects "clang;lld;polly" \
-	--targets "ARM;AArch64" \
+	--targets "ARM;AArch64;X86" \
 	--shallow-clone \
+	--defines "LLVM_PARALLEL_COMPILE_JOBS=$(nproc) LLVM_PARALLEL_LINK_JOBS=$(nproc) CMAKE_C_FLAGS=-O3 CMAKE_CXX_FLAGS=-O3 LLVM_USE_LINKER=lld LLVM_ENABLE_LLD=ON" \
 	--incremental \
 	--lto full \
 	--build-type "Release"
@@ -61,7 +66,7 @@ tg_post_msg "<b>$LLVM_NAME: Building LLVM. . .</b>"
 # Build binutils
 msg "$LLVM_NAME: Building binutils..."
 tg_post_msg "<b>$LLVM_NAME: Building Binutils. . .</b>"
-./build-binutils.py --targets arm aarch64
+./build-binutils.py --targets arm aarch64 x86_64
 
 # Remove unused products
 rm -fr install/include
