@@ -1154,8 +1154,12 @@ def invoke_cmake(args, dirs, env_vars, stage):
 
     defines = build_cmake_defines(args, dirs, env_vars, stage)
     cmake += [f'-D{key}={val}' for key, val in defines.items()]
+    cmake_arguments = args.defines[0]
+    cmake_arguments = cmake_arguments.split("//")
     if args.defines:
-        cmake += [f'-D{d}' for d in args.defines]
+        cmake += [f'-D{d}' for d in cmake_arguments]
+    for d in cmake_arguments:
+        print(d + "\n")
 
     cmake += [dirs.llvm_folder.joinpath("llvm")]
 
